@@ -77,7 +77,7 @@ class Settings(pydantic.BaseSettings):
         ):
             return (init_settings,) \
                 + (env_settings,) \
-                + tuple(_file_settings(f"{k}{v}") for k, v in cls.SOURCES) \
+                + tuple(_file_settings(filename) for filename in reversed(cls.SOURCES)) \
                 + (file_secret_settings,)
 
     # ---- Global settings fields
@@ -86,10 +86,10 @@ class Settings(pydantic.BaseSettings):
     debug: bool = False
 
     def __new__(cls, env, stage, **_):
-        cls.Config.SOURCES = itertools.product(
+        cls.Config.SOURCES = [k + v for k, v in itertools.product(
             [DEFAULT, env, stage, FINAL],
             [".yml", ".yaml", ".json"] + importlib.machinery.SOURCE_SUFFIXES
-        )
+        )]
         return super().__new__(cls)
 
     def __init__(self, env, stage, **kwargs):
