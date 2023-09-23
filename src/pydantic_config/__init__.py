@@ -90,7 +90,7 @@ class Settings(pydantic.BaseSettings):
             [DEFAULT, env, stage, FINAL],
             [".yml", ".yaml", ".json"] + importlib.machinery.SOURCE_SUFFIXES
         )]
-        return super().__new__(cls)
+        return super().__new__(cls)  # pylint: disable=no-value-for-parameter
 
     def __init__(self, env, stage, **kwargs):
         super().__init__(**{"env": env, "stage": stage, **kwargs})
