@@ -6,9 +6,7 @@ pip install --extra-index-url https://test.pypi.org/simple/ pydantic-another-con
 
 # Usage
 
-## Create your own config rules
-
-`config.py`
+## Create your own settings rules in `settings.py`
 
 ```python
 import enum
@@ -20,7 +18,7 @@ import pydantic
 import pydantic_config
 
 
-class Config(pydantic_config.Settings):
+class Settings(pydantic_config.Settings):
 
     class Config:
         arbitrary_types_allowed = True
@@ -30,12 +28,12 @@ class Config(pydantic_config.Settings):
         samplerate: int
 
     input: Input = pydantic.Field(default_factory=Input)
-    storage: pydantic.DirectoryPath = "/tmp/storage"
+    storage: pydantic_config.DirectoryPathCreated = "/tmp/storage"
     source: str
 ```
-Create `config` directory. You can change it with CONFIG_PATH environment variable.
+Create `settings` directory. You can change it with SETTINGS_PATH environment variable.
 
-Create config file `config/config.yaml`
+Create settings file `settings/default.yaml`
 
 ```yaml
 input:
@@ -43,11 +41,11 @@ input:
 source: source
 ```
 
-## Validate your config
+## Validate your settings
 ```python
 import os
 
-from config import Config
+import pydantic_config
 
 
 ENV = os.getenv("ENV", "development")
@@ -55,8 +53,8 @@ STAGE = os.getenv("STAGE", "default")
 
 
 def main():
-    config = Config(ENV, STAGE)
-    print(config.dict())
+    settings = Settings(ENV, STAGE)
+    print(settings.dict())
 
 
 if __name__ == "__main__":
@@ -74,10 +72,9 @@ from benedict import benedict
 
 import typer
 
-from config import Config
 
 
-class ConfigTypes(str, enum.Enum):
+class SettingsTypes(str, enum.Enum):
     yaml = "yaml"
     json = "json"
     ini = "ini"
@@ -90,21 +87,21 @@ STAGE = os.getenv("STAGE", "default")
 cli = typer.Typer()
 
 
-@cli.command("config")
-def _config(
+@cli.command("settings")
+def _settings(
     section: Optional[str] = typer.Option(None),
-    format_: ConfigTypes = typer.Option(ConfigTypes.yaml, "--format"),
+    format_: ConfigTypes = typer.Option(SettingsTypes.yaml, "--format"),
     output: Optional[pathlib.Path] = typer.Option(None),
     quiet: bool = typer.Option(False),
     indent: int = typer.Option(4)
 ):
-    config = Config(ENV, STAGE)
+    settings = Settings(ENV, STAGE)
     if output:
         output = output.open("w", encoding="utf-8")
     if section:
-        d = benedict(config).get(section)
+        d = benedict(settings).get(section)
     else:
-        d = benedict(config, keypath_separator=None)
+        d = benedict(settings, keypath_separator=None)
     if format_ == "yaml":
         result = d.to_yaml(allow_unicode="utf-8", default_flow_style=False)
     elif format_ == "json":

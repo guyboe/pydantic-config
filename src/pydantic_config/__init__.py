@@ -7,6 +7,7 @@ import importlib
 from typing import Dict, Any, Callable
 
 import pydantic
+import pydantic_settings
 
 from benedict import benedict
 
@@ -17,35 +18,15 @@ DEFAULT = "default"
 FINAL = "final"
 
 ENV_PREFIX = os.environ.get("ENV_PREFIX", "")
-CONFIG_PATH = os.environ.get("CONFIG_PATH", "config")
+SETTINGS_PATH = os.environ.get("SETTINGS_PATH", "settings")
 ENV_NESTED_DELIMITER = os.environ.get("ENV_NESTED_DELIMITER", "__")
-
-
-def resolve_filepath(value):
-    path = pathlib.Path(value)
-    if path.is_file():
-        return str(path.resolve())
-    raise ValueError("Value must be a path to file and exists")
-
-
-class Url(pydantic.AnyUrl):
-    host_required: bool = False
-
-
-try:
-    from enum import StrEnum  # pylint: disable=no-name-in-module,unused-import
-except:  # pylint: disable=bare-except
-    class StrEnum(enum.Enum):
-        @staticmethod
-        def _generate_next_value_(name, *_):
-            return name.lower()
 
 
 def _file_settings(filename: str) -> Callable:
 
-    path = (pathlib.Path(CONFIG_PATH) / pathlib.Path(filename)).resolve()
+    path = (pathlib.Path(SETTINGS_PATH) / pathlib.Path(filename)).resolve()
 
-    def func(_: pydantic.BaseSettings) -> Dict[str, Any]:
+    def func(_: pydantic_settings.BaseSettings) -> Dict[str, Any]:
         if not path.exists():
             return {}
         if path.suffix in importlib.machinery.SOURCE_SUFFIXES:
@@ -63,9 +44,8 @@ def _file_settings(filename: str) -> Callable:
     return func
 
 
-class Settings(pydantic.BaseSettings):
+class Settings(pydantic_settings.BaseSettings):
 
-    # ---- Settings config
     class Config:
 
         env_prefix = ENV_PREFIX
