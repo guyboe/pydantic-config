@@ -49,7 +49,7 @@ import pydantic_config
 
 
 ENV = os.getenv("ENV", "development")
-STAGE = os.getenv("STAGE", "default")
+STAGE = os.getenv("STAGE", "stage")
 
 
 def main():
@@ -81,7 +81,7 @@ class SettingsTypes(str, enum.Enum):
 
 
 ENV = os.getenv("ENV", "development")
-STAGE = os.getenv("STAGE", "default")
+STAGE = os.getenv("STAGE", "stage")
 
 
 cli = typer.Typer()
@@ -102,9 +102,9 @@ def _settings(
         d = benedict(settings).get(section)
     else:
         d = benedict(settings, keypath_separator=None)
-    if format_ == "yaml":
-        result = d.to_yaml(allow_unicode="utf-8", default_flow_style=False)
-    elif format_ == "json":
+    if format_ == SettingsTypes.yaml:
+        result = d.to_yaml(allow_unicode="utf-8", indent=indent, default_flow_style=False)
+    elif format_ == SettingsTypes.json:
         result = d.to_json(ensure_ascii=False, indent=indent)
     else:
         result = d.to_ini()

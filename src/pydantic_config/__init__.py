@@ -20,6 +20,7 @@ FINAL = "final"
 ENV_PREFIX = os.environ.get("ENV_PREFIX", "")
 SETTINGS_PATH = os.environ.get("SETTINGS_PATH", "settings")
 ENV_NESTED_DELIMITER = os.environ.get("ENV_NESTED_DELIMITER", "__")
+ENV_FILE_SUFFIX = os.environ.get("ENV_FILE_SUFFIX", ".env")
 
 
 def _file_settings(filename: str) -> Callable:
@@ -73,4 +74,9 @@ class Settings(pydantic_settings.BaseSettings):
         return super().__new__(cls)  # pylint: disable=no-value-for-parameter
 
     def __init__(self, env, stage, **kwargs):
-        super().__init__(**{"env": env, "stage": stage, **kwargs})
+        super().__init__(
+            **{"env": env, "stage": stage, **kwargs},
+            _env_file=[pathlib.Path(SETTINGS_PATH) / (k + v) for k, v in itertools.product(
+                ["", DEFAULT, env, stage, FINAL], [ENV_FILE_SUFFIX]
+            )]
+        )
